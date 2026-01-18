@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+langchain
+langchain-ollama
+scikit-learn
+numpy
+pydantic
