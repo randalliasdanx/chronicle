@@ -78,7 +78,7 @@ window.addEventListener('scroll', () => {
 // MESSAGE HANDLING - Respond to background script requests
 // ============================================================================
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === 'EXTRACT_CONTENT') {
         const content = extractPageContent();
 

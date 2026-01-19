@@ -5,3 +5,5 @@ langchain-ollama
 scikit-learn
 numpy
 pydantic
+sentence_transformers
+hdbscan

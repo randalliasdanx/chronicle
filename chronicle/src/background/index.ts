@@ -6,7 +6,7 @@ import type {
 const API_BASE_URL = 'http://localhost:8000'
 
 chrome.runtime.onInstalled.addListener((details) => {
-    console.log('Chronicle Extension installd!', details.reason);
+    console.log('Chronicle Extension installed!', details.reason);
 
     chrome.storage.local.set({
         settings: {
@@ -30,9 +30,9 @@ chrome.runtime.onMessage.addListener(
     }
 )
 
-async function handleMessage(
+export async function handleMessage(
     message: Message,
-    sender: chrome.runtime.MessageSender
+    _sender: chrome.runtime.MessageSender
 ): Promise<MessageResponse> {
     switch (message.type) {
         case 'GET_ALL_TABS':
@@ -88,7 +88,7 @@ async function getAllTabs(): Promise<MessageResponse<TabInfo[]>> {
 
 function calculateImportance(
     tab: chrome.tabs.Tab,
-    metadata?: { lastInteraction?: number }
+    _metadata?: { lastInteraction?: number }
 ): number {
     let score = 50; // Start at middle
 
@@ -229,6 +229,13 @@ async function clusterTabs(): Promise<MessageResponse<ClusterResult[]>> {
             throw new Error(`Backend error: ${response.status}`);
         }
         const clusters: ClusterResult[] = await response.json();
+
+        for (const cluster of clusters) {
+            await createTabGroup(
+                cluster.tabIds, 
+                cluster.name, cluster.color as any
+            )
+        }
         return { success: true, data: clusters };
     } catch (error) {
         return { success: false, error: (error as Error).message }

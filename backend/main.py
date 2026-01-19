@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 import numpy as np 
 from sklearn.cluster import DBSCAN
+from sentence_transformers import SentenceTransformer
+import hdbscan
 
 embeddings_model = OllamaEmbeddings(model="nomic-embed-text")
 chat_model = ChatOllama(model="llama3.2")
@@ -34,26 +36,23 @@ def generate_embeddings(tabs: list[TabContent]) -> list[list[float]]:
         combined = f"Title: {tab.title}\nContent: {tab.text[:1000]}"
         texts.append(combined)
     
+    st = SentenceTransformer("all-MiniLM-L6-v2")
+    X = st.encode(texts)
     # Generate embeddings via Ollama
-    embeddings = embeddings_model.embed_documents(texts)
-    return embeddings
+    return X
 
 def cluster_embeddings(embeddings: list[list[float]]):
     if len(embeddings) < 2: 
         return [0] * len(embeddings)
     
     X = np.array(embeddings)
-    
-    # Debug: Calculate pairwise cosine distances
-    from sklearn.metrics.pairwise import cosine_distances
-    distances = cosine_distances(X)
-    print(f"[Debug] Cosine distance matrix:\n{np.round(distances, 3)}")
-    
-    clustering = DBSCAN(eps=0.4, min_samples=2, metric='cosine').fit(X)
-    
-    print(f"[Debug] DBSCAN labels: {clustering.labels_}")
-    
-    return clustering.labels_.tolist()
+    clusterer = hdbscan.HDBSCAN(
+        min_cluster_size=2,
+        min_samples=1, 
+        metric="euclidean",
+        cluster_selection_method="eom"
+    )
+    return clusterer.fit_predict(X).tolist()
 
 def generate_group_name(tabs: list[TabContent]) -> str:
     """
